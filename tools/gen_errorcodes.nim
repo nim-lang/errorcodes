@@ -47,6 +47,11 @@ type
     Success
 """
 
+  var fromWindows = """proc windowsToErrorCode*(err: int32): ErrorCode =
+  if err == 0'i32:
+    Success
+"""
+
   var fromHttp = """proc httpToErrorCode*(err: int): ErrorCode =
   if err == 200:
     Success
@@ -60,25 +65,30 @@ type
   case err
 """
 
+  var toWindows = """proc errorCodeToWindows*(err: ErrorCode): int32 =
+  case err
+"""
+
   var i = 0
   for line in lines(inp):
     inc i
     if i <= 2: continue # skip header
     var parts = line.split("|")
     if parts.len == 0: continue
-    if parts.len != 6:
+    if parts.len != 7:
       quit "WRONG LINE: " & line
-    parts = parts[1..^2]
+    parts = parts[1..^2] # ignore first and last entries which exist to due the surrounding |
     enumDecl.add "\n    "
     let enumVal = parts[0].strip
     enumDecl.add enumVal
     enumDecl.add "  ## "
-    enumDecl.add parts[3].strip
+    enumDecl.add parts[4].strip
 
     errnoDecls.addDecls parts[1]
 
     fromPosix.elifSection toPosix, parts[1], enumVal
     fromHttp.elifSection toHttp, parts[2], enumVal
+    fromWindows.elifSection toWindows, parts[3], enumVal
 
   fromPosix.add """  else:
     Failure"""
@@ -86,9 +96,14 @@ type
   fromHttp.add """  else:
     Failure"""
 
+  fromWindows.add """  else:
+    Failure"""
+
   toPosix.add """  else: 1'i32"""
 
   toHttp.add """  else: 500"""
+
+  toWindows.add """  else: 1124'i32"""
 
   inp.close()
 
@@ -101,9 +116,13 @@ type
   outf.writeLine ""
   outf.writeLine fromHttp
   outf.writeLine ""
+  outf.writeLine fromWindows
+  outf.writeLine ""
   outf.writeLine toPosix
   outf.writeLine ""
   outf.writeLine toHttp
+  outf.writeLine ""
+  outf.writeLine toWindows
   outf.close
 
 main()
