@@ -3,9 +3,7 @@
 import errorcodes
 
 proc httpToErrorCode*(err: int): ErrorCode =
-  if err == 200:
-    Success
-  elif err == 200 or err == 201 or err == 202:
+  if err == 200 or err == 201 or err == 202:
     Success
   elif err == 500:
     Failure

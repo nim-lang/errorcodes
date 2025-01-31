@@ -1,10 +1,12 @@
 
 import std / [strutils, sequtils]
 
-proc elifSection(dest, destB: var string; values, enumVal: string) =
+proc elifSection(dest, destB: var string; values, enumVal: string; sections: var int) =
   let vals = values.strip.split(", ").filterIt(it.strip.len > 0)
   if vals.len > 0:
-    dest.add "  elif err == "
+    inc sections
+    let keyw = if sections == 1: "  if" else: "  elif"
+    dest.add keyw & " err == "
     let firstVal = vals[0].strip
     dest.add firstVal
     for j in 1 ..< vals.len:
@@ -45,18 +47,12 @@ type
   var errnoDecls = ""
 
   var fromPosix = """proc posixToErrorCode*(err: int32): ErrorCode =
-  if err == 0'i32:
-    Success
 """
 
   var fromWindows = """proc windowsToErrorCode*(err: int32): ErrorCode =
-  if err == 0'i32:
-    Success
 """
 
   var fromHttp = """proc httpToErrorCode*(err: int): ErrorCode =
-  if err == 200:
-    Success
 """
 
   var toPosix = """proc errorCodeToPosix*(err: ErrorCode): int32 =
@@ -72,6 +68,9 @@ type
 """
 
   var i = 0
+  var posixSections = 0
+  var httpSections = 0
+  var windowsSections = 0
   for line in lines(inp):
     inc i
     if i <= 2: continue # skip header
@@ -88,9 +87,9 @@ type
 
     errnoDecls.addDecls parts[1]
 
-    fromPosix.elifSection toPosix, parts[1], enumVal
-    fromHttp.elifSection toHttp, parts[2], enumVal
-    fromWindows.elifSection toWindows, parts[3], enumVal
+    fromPosix.elifSection toPosix, parts[1], enumVal, posixSections
+    fromHttp.elifSection toHttp, parts[2], enumVal, httpSections
+    fromWindows.elifSection toWindows, parts[3], enumVal, windowsSections
 
   fromPosix.add """  else:
     Failure"""

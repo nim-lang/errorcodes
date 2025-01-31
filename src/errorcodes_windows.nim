@@ -5,8 +5,6 @@ import errorcodes
 proc windowsToErrorCode*(err: int32): ErrorCode =
   if err == 0'i32:
     Success
-  elif err == 0'i32:
-    Success
   elif err == 534'i32:
     OverflowError
   elif err == 1124'i32:

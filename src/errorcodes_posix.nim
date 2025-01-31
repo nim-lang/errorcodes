@@ -84,8 +84,6 @@ var ENOTRECOVERABLE {.importc: "ENOTRECOVERABLE", header: "<errno.h>".}: int32
 proc posixToErrorCode*(err: int32): ErrorCode =
   if err == 0'i32:
     Success
-  elif err == 0'i32:
-    Success
   elif err == EOVERFLOW:
     OverflowError
   elif err == ERANGE or err == EDOM:
